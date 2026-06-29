@@ -14,6 +14,7 @@ import 'controllers/sales_controller.dart';
 import 'controllers/stock_controller.dart';
 import 'controllers/weekly_sales_controller.dart';
 import 'controllers/product_analytics_controller.dart';
+import 'controllers/global_search_controller.dart';
 import 'views/splash_view.dart';
 
 import 'dart:io';
@@ -46,6 +47,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => StockController()),
         ChangeNotifierProvider(create: (_) => WeeklySalesController()),
         ChangeNotifierProvider(create: (_) => ProductAnalyticsController()),
+        ChangeNotifierProvider(create: (_) => GlobalSearchController()),
       ],
       child: const MyApp(),
     ),

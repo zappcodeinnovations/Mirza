@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/reports_controller.dart';
 import '../../core/app_icons.dart';
 import '../../core/app_theme.dart';
+import '../../views/search/search_view.dart';
 
 class ReportsView extends StatefulWidget {
   const ReportsView({super.key});
@@ -44,6 +45,17 @@ class _ReportsViewState extends State<ReportsView> with SingleTickerProviderStat
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(AppIcons.search, color: AppTheme.neonBlue),
+            tooltip: "Global Search",
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SearchView(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(AppIcons.download),
             tooltip: 'Download Report',

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/product_controller.dart';
 import '../../core/app_icons.dart';
 import '../../core/app_theme.dart';
+import '../../views/search/search_view.dart';
 import 'product_detail_view.dart';
 
 class ProductListView extends StatefulWidget {
@@ -126,6 +127,20 @@ class _ProductListViewState extends State<ProductListView> {
         elevation: 0,
 
         actions: [
+          IconButton(
+            icon: const Icon(
+              AppIcons.search,
+              color: AppTheme.neonBlue,
+            ),
+            tooltip: "Global Search",
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SearchView(),
+                ),
+              );
+            },
+          ),
           IconButton(
             onPressed: () {
               _showFilterBottomSheet(
