@@ -1,4 +1,4 @@
-package com.example.mirzza
+package com.zappkode.mirza
 
 import io.flutter.embedding.android.FlutterActivity
 
