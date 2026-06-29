@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/app_theme.dart';
 import '../../../controllers/dashboard_controller.dart';
+import '../../../views/search/search_view.dart';
 import 'dashboard_filter_widgets.dart';
 
 class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -122,6 +123,25 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
             ],
+          ),
+        ),
+
+        /// SEARCH BUTTON
+        Container(
+          margin: const EdgeInsets.only(top: 8, bottom: 8, right: 10),
+          child: IconButton(
+            icon: const Icon(
+              Icons.search,
+              color: AppTheme.neonGreen,
+            ),
+            tooltip: "Search",
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SearchView(),
+                ),
+              );
+            },
           ),
         ),
 

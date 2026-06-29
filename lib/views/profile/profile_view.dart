@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/app_icons.dart';
 import '../../core/app_theme.dart';
+import '../../views/search/search_view.dart';
 import '../auth/login_view.dart';
 
 class ProfileView extends StatefulWidget {
@@ -84,6 +85,19 @@ class _ProfileViewState extends State<ProfileView> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(AppIcons.search, color: AppTheme.neonBlue),
+            tooltip: "Global Search",
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SearchView(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: controller.isLoading && user == null
           ? const Center(
