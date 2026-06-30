@@ -127,20 +127,20 @@ class _ProductListViewState extends State<ProductListView> {
         elevation: 0,
 
         actions: [
-          IconButton(
-            icon: const Icon(
-              AppIcons.search,
-              color: AppTheme.neonBlue,
-            ),
-            tooltip: "Global Search",
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SearchView(),
-                ),
-              );
-            },
-          ),
+          // IconButton(
+          //   icon: const Icon(
+          //     AppIcons.search,
+          //     color: AppTheme.neonBlue,
+          //   ),
+          //   tooltip: "Global Search",
+          //   onPressed: () {
+          //     Navigator.of(context).push(
+          //       MaterialPageRoute(
+          //         builder: (context) => const SearchView(),
+          //       ),
+          //     );
+          //   },
+          // ),
           IconButton(
             onPressed: () {
               _showFilterBottomSheet(
@@ -187,7 +187,7 @@ class _ProductListViewState extends State<ProductListView> {
                   TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: "Search SKU code (e.g. Clayton)...",
+                      hintText: "Search by name, SKU, color, gender...",
                       prefixIcon: const Icon(
                         AppIcons.search,
                         color: AppTheme.neonBlue,
@@ -938,14 +938,20 @@ class _ProductListViewState extends State<ProductListView> {
           children: [
             const Icon(AppIcons.shoppingBag, size: 50, color: AppTheme.neonGreen),
             const SizedBox(height: 10),
-            Text(
-              product.skuCode.toString().isNotEmpty
-                  ? product.skuCode.toString()[0].toUpperCase()
-                  : 'P',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.neonPurple,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                product.styleName.toString().isNotEmpty
+                    ? product.styleName.toString()
+                    : 'Unknown Product',
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.neonPurple,
+                ),
               ),
             ),
           ],

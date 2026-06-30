@@ -30,11 +30,11 @@ class DashboardActiveFiltersRow extends StatelessWidget {
         ),
       );
     }
-    if (controller.selectedPlatform != 'All') {
+    if (controller.selectedPlatforms.isNotEmpty) {
       chips.add(
         _DashboardFilterChip(
-          label: 'Platform: ${controller.selectedPlatform}',
-          onDeleted: () => controller.setFilters(platform: 'All'),
+          label: 'Platform: ${controller.selectedPlatforms.join(', ')}',
+          onDeleted: () => controller.setFilters(platforms: []),
         ),
       );
     }
@@ -141,6 +141,16 @@ void showDashboardFilterBottomSheet(
                 ],
               ),
               const SizedBox(height: 20),
+              _DashboardMultiSelectFilterGroup(
+                title: 'Marketplace',
+                selectedValues: controller.selectedPlatforms,
+                options: filters?.platforms ?? [],
+                onSelected: (values) {
+                  controller.setFilters(platforms: values);
+                  setModalState(() {});
+                },
+              ),
+              const SizedBox(height: 12),
               _DashboardFilterGroup(
                 title: 'Date Range',
                 selectedValue: controller.selectedDateRange,
@@ -200,16 +210,6 @@ void showDashboardFilterBottomSheet(
                 options: ['All', ...(filters?.materials ?? [])],
                 onSelected: (value) {
                   controller.setFilters(material: value);
-                  setModalState(() {});
-                },
-              ),
-              const SizedBox(height: 12),
-              _DashboardFilterGroup(
-                title: 'Marketplace',
-                selectedValue: controller.selectedPlatform,
-                options: ['All', ...(filters?.platforms ?? [])],
-                onSelected: (value) {
-                  controller.setFilters(platform: value);
                   setModalState(() {});
                 },
               ),
@@ -402,6 +402,127 @@ class _DashboardFilterGroup extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DashboardMultiSelectFilterGroup extends StatefulWidget {
+  final String title;
+  final List<String> selectedValues;
+  final List<String> options;
+  final ValueChanged<List<String>> onSelected;
+
+  const _DashboardMultiSelectFilterGroup({
+    required this.title,
+    required this.selectedValues,
+    required this.options,
+    required this.onSelected,
+  });
+
+  @override
+  State<_DashboardMultiSelectFilterGroup> createState() => _DashboardMultiSelectFilterGroupState();
+}
+
+class _DashboardMultiSelectFilterGroupState extends State<_DashboardMultiSelectFilterGroup> {
+  String searchQuery = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final filteredOptions = widget.options
+        .where((opt) => opt.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
+
+    final isAllSelected = widget.selectedValues.length == widget.options.length && widget.options.isNotEmpty;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14),
+          title: Text(
+            widget.title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface.withOpacity(0.72),
+            ),
+          ),
+          subtitle: Text(
+            widget.selectedValues.isEmpty 
+                ? 'All' 
+                : widget.selectedValues.join(', '),
+            style: theme.textTheme.bodyMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          childrenPadding: const EdgeInsets.all(14).copyWith(top: 0),
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+              ),
+              onChanged: (val) {
+                setState(() {
+                  searchQuery = val;
+                });
+              },
+            ),
+            const SizedBox(height: 10),
+            Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    if (searchQuery.isEmpty)
+                      CheckboxListTile(
+                        title: const Text('Select All'),
+                        value: isAllSelected,
+                        dense: true,
+                        activeColor: theme.colorScheme.primary,
+                        onChanged: (val) {
+                          if (val == true) {
+                            widget.onSelected(List.from(widget.options));
+                          } else {
+                            widget.onSelected([]);
+                          }
+                        },
+                      ),
+                    ...filteredOptions.map((option) {
+                      final isSelected = widget.selectedValues.contains(option);
+                      return CheckboxListTile(
+                        title: Text(option),
+                        value: isSelected,
+                        dense: true,
+                        activeColor: theme.colorScheme.primary,
+                        onChanged: (val) {
+                          final newSelected = List<String>.from(widget.selectedValues);
+                          if (val == true) {
+                            newSelected.add(option);
+                          } else {
+                            newSelected.remove(option);
+                          }
+                          widget.onSelected(newSelected);
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

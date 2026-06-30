@@ -11,6 +11,8 @@ import 'widgets/dashboard_filter_widgets.dart';
 import 'widgets/dashboard_summary_widgets.dart';
 import '../chat/widgets/floating_chat_bot.dart';
 
+import 'package:lottie/lottie.dart';
+
 class DashboardView extends StatelessWidget {
   const DashboardView({super.key});
 
@@ -29,12 +31,26 @@ class DashboardView extends StatelessWidget {
       appBar: DashboardAppBar(controller: controller),
       body: Stack(
         children: [
-          controller.isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppTheme.neonBlue,
-                    ),
+          (controller.isLoading || controller.dashboardData?.kpis == null)
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Lottie.asset(
+                        'assets/lottie/analytics_2.json',
+                        width: 250,
+                        height: 250,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                           return const CircularProgressIndicator(
+                             valueColor: AlwaysStoppedAnimation<Color>(
+                               AppTheme.neonBlue,
+                             ),
+                           );
+                        }
+                      ),
+                     
+                    ],
                   ),
                 )
               : controller.errorMessage != null

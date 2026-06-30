@@ -89,7 +89,7 @@ class DashboardDrawer extends StatelessWidget {
             
             DashboardDrawerItem(
               icon: AppIcons.trendingUp,
-              title: "New Launches",
+              title: "New Launch",
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -99,6 +99,7 @@ class DashboardDrawer extends StatelessWidget {
               },
             ),
 
+            /*
             DashboardDrawerItem(
               icon: AppIcons.search,
               title: "SEO Data Import",
@@ -110,6 +111,7 @@ class DashboardDrawer extends StatelessWidget {
                 );
               },
             ),
+            */
 
             DashboardDrawerItem(
               icon: Icons.calendar_view_week,
@@ -123,6 +125,7 @@ class DashboardDrawer extends StatelessWidget {
               },
             ),
 
+            /*
             DashboardDrawerItem(
               icon: Icons.error_outline,
               title: "Missing Products",
@@ -134,6 +137,7 @@ class DashboardDrawer extends StatelessWidget {
                 );
               },
             ),
+            */
 
             DashboardDrawerItem(
               icon: Icons.storefront,
@@ -147,6 +151,7 @@ class DashboardDrawer extends StatelessWidget {
               },
             ),
 
+            /*
             DashboardDrawerItem(
               icon: Icons.shopping_cart_checkout,
               title: "Sales",
@@ -158,6 +163,7 @@ class DashboardDrawer extends StatelessWidget {
                 );
               },
             ),
+            */
 
             DashboardDrawerItem(
               icon: Icons.calendar_view_month_outlined,

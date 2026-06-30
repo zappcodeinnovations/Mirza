@@ -16,7 +16,7 @@ class DashboardController extends ChangeNotifier {
   /// =========================
   String _selectedBrand = 'All';
   String _selectedGender = 'All';
-  String _selectedPlatform = 'All';
+  List<String> _selectedPlatforms = [];
   String _selectedFootwearType = 'All';
   String _selectedProductType = 'All';
   String _selectedMaterial = 'All';
@@ -40,7 +40,7 @@ class DashboardController extends ChangeNotifier {
 
   String get selectedBrand => _selectedBrand;
   String get selectedGender => _selectedGender;
-  String get selectedPlatform => _selectedPlatform;
+  List<String> get selectedPlatforms => _selectedPlatforms;
   String get selectedFootwearType => _selectedFootwearType;
   String get selectedProductType => _selectedProductType;
   String get selectedMaterial => _selectedMaterial;
@@ -101,7 +101,7 @@ class DashboardController extends ChangeNotifier {
   void setFilters({
     String? brand,
     String? gender,
-    String? platform,
+    List<String>? platforms,
     String? footwearType,
     String? productType,
     String? material,
@@ -111,7 +111,7 @@ class DashboardController extends ChangeNotifier {
   }) {
     if (brand != null) _selectedBrand = brand;
     if (gender != null) _selectedGender = gender;
-    if (platform != null) _selectedPlatform = platform;
+    if (platforms != null) _selectedPlatforms = platforms;
     if (footwearType != null) _selectedFootwearType = footwearType;
     if (productType != null) _selectedProductType = productType;
     if (material != null) _selectedMaterial = material;
@@ -129,7 +129,7 @@ class DashboardController extends ChangeNotifier {
   void resetFilters() {
     _selectedBrand = 'All';
     _selectedGender = 'All';
-    _selectedPlatform = 'All';
+    _selectedPlatforms = [];
     _selectedFootwearType = 'All';
     _selectedProductType = 'All';
     _selectedMaterial = 'All';
@@ -154,7 +154,7 @@ class DashboardController extends ChangeNotifier {
       final data = await _dashboardService.getDashboardData(
         brand: _selectedBrand,
         gender: _selectedGender,
-        platform: _selectedPlatform,
+        platforms: _selectedPlatforms,
         footwearType: _selectedFootwearType,
         productType: _selectedProductType,
         material: _selectedMaterial,

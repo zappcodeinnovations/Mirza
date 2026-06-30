@@ -14,12 +14,21 @@ class ForecastingView extends StatefulWidget {
 }
 
 class _ForecastingViewState extends State<ForecastingView> {
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ForecastingController>().loadForecasting();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -273,17 +282,64 @@ class _ForecastingViewState extends State<ForecastingView> {
                     subtitle: 'Highest-priority SKUs from the forecasting API',
                   ),
                   const SizedBox(height: 14),
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: controller.topProducts.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 14),
-                    itemBuilder: (context, index) {
-                      return ForecastingProductCard(
-                        product: controller.topProducts[index],
-                      );
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: "Search SKU, Style...",
+                      prefixIcon: const Icon(AppIcons.search, color: AppTheme.neonBlue),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(AppIcons.close, color: AppTheme.neonBlue),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppTheme.darkSurface,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val.toLowerCase();
+                      });
                     },
                   ),
+                  const SizedBox(height: 14),
+                  Builder(builder: (context) {
+                    final filteredProducts = controller.topProducts.where((p) {
+                      if (_searchQuery.isEmpty) return true;
+                      return p.skuCode.toLowerCase().contains(_searchQuery) ||
+                             p.skuName.toLowerCase().contains(_searchQuery);
+                    }).toList();
+
+                    if (filteredProducts.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Center(child: Text('No matching products found.', style: TextStyle(color: Colors.white70))),
+                      );
+                    }
+
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredProducts.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 14),
+                      itemBuilder: (context, index) {
+                        return ForecastingProductCard(
+                          product: filteredProducts[index],
+                        );
+                      },
+                    );
+                  }),
                 ],
               ),
             ),

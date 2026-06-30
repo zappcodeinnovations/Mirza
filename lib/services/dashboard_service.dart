@@ -67,7 +67,7 @@ class DashboardService {
   Future<DashboardResponseModel?> getDashboardData({
     String? brand,
     String? gender,
-    String? platform,
+    List<String>? platforms,
     String? footwearType,
     String? productType,
     String? material,
@@ -86,8 +86,8 @@ class DashboardService {
         queryParams['gender'] = gender;
       }
 
-      if (platform != null && platform.isNotEmpty && platform != 'All') {
-        queryParams['platform'] = platform;
+      if (platforms != null && platforms.isNotEmpty) {
+        queryParams['platform'] = platforms.join(',');
       }
 
       if (footwearType != null &&

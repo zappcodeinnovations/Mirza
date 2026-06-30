@@ -25,57 +25,36 @@ class _DashboardDonutChartSectionState
     extends State<DashboardDonutChartSection> {
   int touchedIndex = -1;
 
-  Color getColorFromLabel(String label) {
+  Color getColorFromLabel(String label, int index) {
     switch (label.toLowerCase()) {
-      case 'black':
-        return Colors.black;
-
-      case 'tan':
-        return const Color(0xFFD2B48C);
-
-      case 'brown':
-        return Colors.brown;
-
-      case 'wood':
-        return const Color(0xFF8B5A2B);
-
-      case 'mink':
-        return const Color(0xFF8D6E63);
-
-      case 'cognac':
-        return const Color(0xFF9A4D1E);
-
-      case 'ash':
-        return Colors.grey;
-
-      case 'white':
-        return Colors.white;
-
-      case 'silver':
-        return Colors.grey.shade400;
-
-      case 'universe':
-        return Colors.deepPurple;
-
-      case 'others':
-        return AppTheme.neonBlue;
-
-      // MATERIAL COLORS
-
-      case 'leather':
-        return const Color(0xFF7B3F00);
-
-      case 'suede':
-        return const Color(0xFFA1887F);
-
-      case 'patent leather':
-        return const Color(0xFF4E342E);
-
-      case 'pu':
-        return Colors.blueGrey;
-
+      case 'black': return Colors.black;
+      case 'tan': return const Color(0xFFD2B48C);
+      case 'brown': return Colors.brown;
+      case 'wood': return const Color(0xFF8B5A2B);
+      case 'mink': return const Color(0xFF8D6E63);
+      case 'cognac': return const Color(0xFF9A4D1E);
+      case 'ash': return Colors.grey;
+      case 'white': return Colors.white;
+      case 'silver': return Colors.grey.shade400;
+      case 'universe': return Colors.deepPurple;
+      case 'others': return AppTheme.neonBlue;
+      case 'leather': return const Color(0xFF7B3F00);
+      case 'suede': return const Color(0xFFA1887F);
+      case 'patent leather': return const Color(0xFF4E342E);
+      case 'pu': return Colors.blueGrey;
       default:
-        return AppTheme.neonGreen;
+        final palette = [
+          AppTheme.neonGreen,
+          AppTheme.neonBlue,
+          AppTheme.neonPink,
+          AppTheme.neonOrange,
+          AppTheme.neonPurple,
+          const Color(0xFF4A90E2),
+          const Color(0xFFF5A623),
+          const Color(0xFF9013FE),
+          const Color(0xFF50E3C2),
+        ];
+        return palette[index % palette.length];
     }
   }
 
@@ -182,7 +161,7 @@ class _DashboardDonutChartSectionState
                                 width: 1,
                               )
                             : BorderSide.none,
-                        color: getColorFromLabel(topItems[index]['label']),
+                        color: getColorFromLabel(topItems[index]['label'], index),
                         value: value,
 
                         title: percentage < 6
@@ -277,7 +256,7 @@ class _DashboardDonutChartSectionState
                     color: AppTheme.darkSurface,
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: getColorFromLabel(topItems[index]['label']),
+                      color: getColorFromLabel(topItems[index]['label'], index),
                     ),
                   ),
                   child: Row(
@@ -286,7 +265,7 @@ class _DashboardDonutChartSectionState
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: getColorFromLabel(topItems[index]['label']),
+                          color: getColorFromLabel(topItems[index]['label'], index),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -498,19 +477,26 @@ class _DashboardReturnAnalysisChartState extends State<DashboardReturnAnalysisCh
                         if (index >= 0 && index < chart.labels.length) {
                           return SideTitleWidget(
                             meta: meta,
-                            space: 4,
-                            child: Transform.rotate(
-                              angle: -0.6,
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                chart.labels[index],
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSurface.withOpacity(0.7),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
+                            space: 6,
+                            child: Transform.translate(
+                              offset: const Offset(-30, 0),
+                              child: Transform.rotate(
+                                angle: -0.7,
+                                alignment: Alignment.centerRight,
+                                child: SizedBox(
+                                  width: 60,
+                                  child: Text(
+                                    chart.labels[index],
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                  ),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           );
@@ -584,12 +570,10 @@ class DashboardCityWiseChart extends StatelessWidget {
       return const SizedBox();
     }
 
-    return _DashboardBarChartSection(
+    return DashboardDonutChartSection(
       title: 'City Wise Products',
       labels: chart.products,
       values: chart.values,
-      accentColor: AppTheme.neonGreen,
-      valueSuffix: '',
     );
   }
 }

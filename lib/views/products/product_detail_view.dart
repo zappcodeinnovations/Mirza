@@ -148,11 +148,11 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                                       fit: BoxFit.contain,
                                       errorBuilder: (_, __, ___) {
                                         return _buildImageFallback(
-                                          product.skuCode,
+                                          product.styleName,
                                         );
                                       },
                                     )
-                                  : _buildImageFallback(product.skuCode),
+                                  : _buildImageFallback(product.styleName),
                             ),
                           ),
                         ),
@@ -307,36 +307,36 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                         ],
                       ),
 
-                      const SizedBox(height: 30),
+                      // const SizedBox(height: 30),
 
                       /// COLORS
-                      const Text(
-                        "Color",
-                        style: TextStyle(
-                          color: Color(0xFF223025),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        height: 54,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            _buildColorSwatch(product.color, true),
-                            // Mocking additional colors for UI purpose as requested
-                            if (product.color.toLowerCase() != 'black')
-                              _buildColorSwatch('Black', false),
-                            if (product.color.toLowerCase() != 'white')
-                              _buildColorSwatch('White', false),
-                            if (product.color.toLowerCase() != 'blue')
-                              _buildColorSwatch('Blue', false),
-                          ],
-                        ),
-                      ),
+                      // const Text(
+                      //   "Color",
+                      //   style: TextStyle(
+                      //     color: Color(0xFF223025),
+                      //     fontSize: 16,
+                      //     fontWeight: FontWeight.w800,
+                      //   ),
+                      // ),
+                      // const SizedBox(height: 14),
+                      // SizedBox(
+                      //   height: 54,
+                      //   child: ListView(
+                      //     scrollDirection: Axis.horizontal,
+                      //     children: [
+                      //       _buildColorSwatch(product.color, true),
+                      //       // Mocking additional colors for UI purpose as requested
+                      //       if (product.color.toLowerCase() != 'black')
+                      //         _buildColorSwatch('Black', false),
+                      //       if (product.color.toLowerCase() != 'white')
+                      //         _buildColorSwatch('White', false),
+                      //       if (product.color.toLowerCase() != 'blue')
+                      //         _buildColorSwatch('Blue', false),
+                      //     ],
+                      //   ),
+                      // ),
 
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 20),
 
                       /// SIZES
                       const Text(
@@ -755,19 +755,24 @@ class _ProductDetailViewState extends State<ProductDetailView> {
     );
   }
 
-  Widget _buildImageFallback(String skuCode) {
+  Widget _buildImageFallback(String productName) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Icon(AppIcons.shoppingBag, size: 100, color: AppTheme.neonBlue),
         const SizedBox(height: 16),
-        Text(
-          skuCode,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFF223025),
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Text(
+            productName.isNotEmpty ? productName : 'Unknown Product',
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF223025),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

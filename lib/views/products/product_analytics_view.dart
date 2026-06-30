@@ -615,102 +615,101 @@ class _ProductAnalyticsViewState extends State<ProductAnalyticsView> {
   Widget _buildCitySalesChart(List<CitySalesData> citySales) {
     if (citySales.isEmpty) return const SizedBox.shrink();
 
-    // Show top 5 cities
     final topCities = citySales.take(5).toList();
-    double maxY = topCities.map((e) => e.qty.toDouble()).reduce((a, b) => a > b ? a : b);
-    if (maxY == 0) maxY = 10;
+    final total = topCities.fold<double>(0, (sum, item) => sum + item.qty.toDouble());
+
+    final palette = [
+      AppTheme.neonGreen,
+      AppTheme.neonBlue,
+      AppTheme.neonPink,
+      AppTheme.neonOrange,
+      AppTheme.neonPurple,
+    ];
 
     return Container(
-      height: 300,
-      padding: const EdgeInsets.only(right: 20, top: 20, bottom: 10),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppTheme.darkAccent),
       ),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: 0.0, end: 1.0),
-        duration: const Duration(milliseconds: 1000),
-        curve: Curves.easeOutCubic,
-        builder: (context, animValue, child) {
-          return BarChart(
-            BarChartData(
-              maxY: maxY * 1.2,
-              barTouchData: BarTouchData(enabled: true),
-              titlesData: FlTitlesData(
-                show: true,
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      int idx = value.toInt();
-                      if (idx >= 0 && idx < topCities.length) {
-                        return SideTitleWidget(
-                          meta: meta,
-                          child: Transform.rotate(
-                            angle: -0.5,
-                            child: Text(
-                              topCities[idx].city,
-                              style: const TextStyle(color: Color(0xFF55605B), fontSize: 9),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: (maxY / 4).clamp(1.0, double.infinity),
-                    reservedSize: 42,
-                    getTitlesWidget: (value, meta) {
-                      return SideTitleWidget(
-                        meta: meta,
-                        child: Text(
-                          value.toInt().toString(),
-                          style: const TextStyle(color: Color(0xFF55605B), fontSize: 10),
-                          textAlign: TextAlign.right,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                getDrawingHorizontalLine: (value) => FlLine(
-                  color: AppTheme.darkAccent,
-                  strokeWidth: 1,
-                  dashArray: [5, 5],
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              barGroups: topCities.asMap().entries.map((e) {
-                return BarChartGroupData(
-                  x: e.key,
-                  barRods: [
-                    BarChartRodData(
-                      toY: e.value.qty.toDouble() * animValue,
-                      color: Colors.purpleAccent,
-                      width: 20,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 240,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 4,
+                centerSpaceRadius: 50,
+                borderData: FlBorderData(show: false),
+                sections: topCities.asMap().entries.map((e) {
+                  final value = e.value.qty.toDouble();
+                  final percentage = total > 0 ? (value / total) * 100 : 0;
+                  return PieChartSectionData(
+                    color: palette[e.key % palette.length],
+                    value: value,
+                    title: percentage > 5 ? '${percentage.toStringAsFixed(0)}%' : '',
+                    radius: 60,
+                    titleStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                  ],
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
+              swapAnimationDuration: const Duration(milliseconds: 800),
+              swapAnimationCurve: Curves.easeOutCubic,
             ),
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.linear,
-          );
-        },
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: topCities.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final city = topCities[index];
+                final color = palette[index % palette.length];
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: color.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        city.city,
+                        style: const TextStyle(
+                          color: Color(0xFF55605B),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

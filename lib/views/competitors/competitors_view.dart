@@ -15,6 +15,8 @@ class CompetitorsView extends StatefulWidget {
 class _CompetitorsViewState extends State<CompetitorsView> {
   final ScrollController _scrollController = ScrollController();
   late CompetitorsController _controller;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -35,6 +37,7 @@ class _CompetitorsViewState extends State<CompetitorsView> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -115,31 +118,92 @@ class _CompetitorsViewState extends State<CompetitorsView> {
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () => controller.loadCompetitors(refresh: true),
-            color: AppTheme.neonBlue,
-            child: ListView.separated(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: controller.competitors.length + (controller.isFetchingMore ? 1 : 0),
-              separatorBuilder: (context, index) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                if (index == controller.competitors.length) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonBlue),
-                      ),
-                    ),
-                  );
-                }
+          final filteredCompetitors = controller.competitors.where((c) {
+            if (_searchQuery.isEmpty) return true;
+            return c.name.toLowerCase().contains(_searchQuery) ||
+                   c.notes.toLowerCase().contains(_searchQuery) ||
+                   c.createdBy.toLowerCase().contains(_searchQuery);
+          }).toList();
 
-                final competitor = controller.competitors[index];
-                return _buildCompetitorCard(theme, competitor);
-              },
-            ),
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: "Search Name, Notes, Creator...",
+                    prefixIcon: const Icon(Icons.search, color: AppTheme.neonBlue),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.close, color: AppTheme.neonBlue),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: theme.colorScheme.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val.toLowerCase();
+                    });
+                  },
+                ),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => controller.loadCompetitors(refresh: true),
+                  color: AppTheme.neonBlue,
+                  child: filteredCompetitors.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(
+                              height: 300,
+                              child: Center(
+                                child: Text(
+                                  'No matching competitors found.',
+                                  style: theme.textTheme.bodyLarge,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListView.separated(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(16),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: filteredCompetitors.length + (controller.isFetchingMore && _searchQuery.isEmpty ? 1 : 0),
+                          separatorBuilder: (context, index) => const SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            if (index == filteredCompetitors.length) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16.0),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonBlue),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            final competitor = filteredCompetitors[index];
+                            return _buildCompetitorCard(theme, competitor);
+                          },
+                        ),
+                ),
+              ),
+            ],
           );
         },
       ),

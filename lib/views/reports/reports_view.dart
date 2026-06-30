@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/reports_controller.dart';
 import '../../core/app_icons.dart';
 import '../../core/app_theme.dart';
-import '../../views/search/search_view.dart';
+import '../../core/app_theme.dart';
 
 class ReportsView extends StatefulWidget {
   const ReportsView({super.key});
@@ -15,6 +15,8 @@ class ReportsView extends StatefulWidget {
 
 class _ReportsViewState extends State<ReportsView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -28,6 +30,7 @@ class _ReportsViewState extends State<ReportsView> with SingleTickerProviderStat
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -45,17 +48,7 @@ class _ReportsViewState extends State<ReportsView> with SingleTickerProviderStat
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(AppIcons.search, color: AppTheme.neonBlue),
-            tooltip: "Global Search",
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SearchView(),
-                ),
-              );
-            },
-          ),
+
           IconButton(
             icon: const Icon(AppIcons.download),
             tooltip: 'Download Report',
@@ -125,62 +118,109 @@ class _ReportsViewState extends State<ReportsView> with SingleTickerProviderStat
           ],
         ),
       ),
-      body: controller.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonBlue),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: "Search SKU, Style, Brand...",
+                prefixIcon: const Icon(AppIcons.search, color: AppTheme.neonBlue),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(AppIcons.close, color: AppTheme.neonBlue),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: AppTheme.darkSurface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
-            )
-          : controller.errorMessage != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    AppIcons.warning,
-                    size: 50,
-                    color: AppTheme.neonPink,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    controller.errorMessage ?? 'Failed to compile report sheets.',
-                    style: theme.textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () => controller.loadAllReports(),
-                    child: const Text('Reload Deck'),
-                  ),
-                ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: () => controller.loadAllReports(),
-              color: AppTheme.neonGreen,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildOverallTab(controller, theme),
-                  _buildForecastTab(controller, theme),
-                  _buildOverstockTab(controller, theme),
-                ],
-              ),
+              onChanged: (val) {
+                setState(() {
+                  _searchQuery = val.toLowerCase();
+                });
+              },
             ),
+          ),
+          Expanded(
+            child: controller.isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonBlue),
+                    ),
+                  )
+                : controller.errorMessage != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          AppIcons.warning,
+                          size: 50,
+                          color: AppTheme.neonPink,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          controller.errorMessage ?? 'Failed to compile report sheets.',
+                          style: theme.textTheme.bodyLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () => controller.loadAllReports(),
+                          child: const Text('Reload Deck'),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: () => controller.loadAllReports(),
+                    color: AppTheme.neonGreen,
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildOverallTab(controller, theme),
+                        _buildForecastTab(controller, theme),
+                        _buildOverstockTab(controller, theme),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildOverallTab(ReportsController controller, ThemeData theme) {
-    if (controller.overallReports.isEmpty) {
+    final filteredReports = controller.overallReports.where((r) {
+      if (_searchQuery.isEmpty) return true;
+      return r.skuCode.toLowerCase().contains(_searchQuery) ||
+             r.styleName.toLowerCase().contains(_searchQuery) ||
+             r.brand.toLowerCase().contains(_searchQuery) ||
+             r.category.toLowerCase().contains(_searchQuery);
+    }).toList();
+
+    if (filteredReports.isEmpty) {
       return Center(child: Text('No report data available.', style: theme.textTheme.bodyLarge));
     }
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: controller.overallReports.length,
+      itemCount: filteredReports.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final report = controller.overallReports[index];
+        final report = filteredReports[index];
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -265,16 +305,24 @@ class _ReportsViewState extends State<ReportsView> with SingleTickerProviderStat
   }
 
   Widget _buildForecastTab(ReportsController controller, ThemeData theme) {
-    if (controller.forecastReports.isEmpty) {
+    final filteredReports = controller.forecastReports.where((r) {
+      if (_searchQuery.isEmpty) return true;
+      return r.skuCode.toLowerCase().contains(_searchQuery) ||
+             r.styleName.toLowerCase().contains(_searchQuery) ||
+             r.brand.toLowerCase().contains(_searchQuery) ||
+             r.category.toLowerCase().contains(_searchQuery);
+    }).toList();
+
+    if (filteredReports.isEmpty) {
       return Center(child: Text('No forecast data available.', style: theme.textTheme.bodyLarge));
     }
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: controller.forecastReports.length,
+      itemCount: filteredReports.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final report = controller.forecastReports[index];
+        final report = filteredReports[index];
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -343,16 +391,24 @@ class _ReportsViewState extends State<ReportsView> with SingleTickerProviderStat
   }
 
   Widget _buildOverstockTab(ReportsController controller, ThemeData theme) {
-    if (controller.overstockProducts.isEmpty) {
+    final filteredReports = controller.overstockProducts.where((r) {
+      if (_searchQuery.isEmpty) return true;
+      return r.skuCode.toLowerCase().contains(_searchQuery) ||
+             r.styleName.toLowerCase().contains(_searchQuery) ||
+             r.brand.toLowerCase().contains(_searchQuery) ||
+             r.category.toLowerCase().contains(_searchQuery);
+    }).toList();
+
+    if (filteredReports.isEmpty) {
       return Center(child: Text('No overstock data available.', style: theme.textTheme.bodyLarge));
     }
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: controller.overstockProducts.length,
+      itemCount: filteredReports.length,
       separatorBuilder: (context, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final product = controller.overstockProducts[index];
+        final product = filteredReports[index];
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
