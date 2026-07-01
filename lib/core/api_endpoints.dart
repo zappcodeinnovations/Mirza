@@ -3,9 +3,13 @@ class ApiEndpoints {
 
   // Authentication & Signup Checks
   static const String registrationStatus = "registration-status/";
+  static const String isEnabled = "is-enabled/";
   static const String register = "register/";
+  static const String registerAdmin = "register-admin/";
   static const String login = "login/";
+  static const String logout = "logout/";
   static const String tokenRefresh = "token/refresh/";
+  static const String deleteAccount = "admin/delete-account/";
 
   // Profile Management
   static const String profile = "profile/";
@@ -57,8 +61,9 @@ class ApiEndpoints {
   static const String weeklyReport = "weekly-report/";
   static const String weeklyReportDownload = "weekly-report/download/";
 
-  // BI Competitors
+  // Competitors Endpoint
   static const String competitors = "competitors/";
+  static const String competitorUpload = "competitors/upload/";
 
   // Sales Modules
   static const String sales = "sales/";
@@ -76,4 +81,12 @@ class ApiEndpoints {
 
   // Product Analytics
   static String productAnalytics(String sku) => "products/$sku/analytics/";
+
+  // Punch Order
+  static const String punchOrderCreate = "punch-order/create/";
+  static const String punchOrderHistory = "punch-order/history/";
+  static const String punchOrderExport = "punch-order/export/";
+  static const String punchOrderDelete = "punch-order/delete/";
+  static const String punchOrderOptions = "punch-order/options/";
+  static const String punchOrderSearch = "punch-order/search/";
 }

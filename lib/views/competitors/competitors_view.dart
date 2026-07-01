@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../controllers/competitors_controller.dart';
 import '../../core/app_theme.dart';
@@ -60,6 +62,99 @@ class _CompetitorsViewState extends State<CompetitorsView> {
           ),
         );
       }
+    }
+  }
+
+  void _showAddMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.add, color: AppTheme.neonBlue),
+                title: const Text('Add Single Competitor'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showAddCompetitorForm(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.upload_file, color: AppTheme.neonBlue),
+                title: const Text('Import from Excel/CSV'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _importCompetitors(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddCompetitorForm(BuildContext parentContext) {
+    showModalBottomSheet(
+      context: parentContext,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: _AddCompetitorFormSheet(),
+        );
+      },
+    );
+  }
+
+  Future<void> _importCompetitors(BuildContext context) async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv', 'xlsx', 'xls'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        if (!mounted) return;
+        
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (c) => const Center(child: CircularProgressIndicator(color: AppTheme.neonBlue)),
+        );
+        
+        final controller = Provider.of<CompetitorsController>(context, listen: false);
+        final response = await controller.uploadCompetitors(file);
+        
+        if (!mounted) return;
+        Navigator.pop(context); // Close loading dialog
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? 'Import result'),
+            backgroundColor: response['success'] == true ? AppTheme.neonGreen : AppTheme.neonPink,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to import: $e'),
+          backgroundColor: AppTheme.neonPink,
+        ),
+      );
     }
   }
 
@@ -207,6 +302,11 @@ class _CompetitorsViewState extends State<CompetitorsView> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddMenu(context),
+        backgroundColor: AppTheme.neonBlue,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
@@ -348,5 +448,154 @@ class _CompetitorsViewState extends State<CompetitorsView> {
           ),
         ),
       );
+  }
+}
+
+class _AddCompetitorFormSheet extends StatefulWidget {
+  @override
+  State<_AddCompetitorFormSheet> createState() => _AddCompetitorFormSheetState();
+}
+
+class _AddCompetitorFormSheetState extends State<_AddCompetitorFormSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _websiteController = TextEditingController();
+  final _notesController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _websiteController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final controller = Provider.of<CompetitorsController>(context, listen: false);
+    final data = {
+      'name': _nameController.text.trim(),
+      'website': _websiteController.text.trim(),
+      'notes': _notesController.text.trim(),
+    };
+
+    final result = await controller.addCompetitor(data);
+    
+    if (!mounted) return;
+    
+    setState(() {
+      _isSubmitting = false;
+    });
+
+    if (result['success'] == true) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: AppTheme.neonGreen,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: AppTheme.neonPink,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Add Competitor',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nameController,
+              decoration: _inputDecoration(theme, 'Competitor Name *'),
+              validator: (value) => value == null || value.trim().isEmpty ? 'Name is required' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _websiteController,
+              decoration: _inputDecoration(theme, 'Website URL'),
+              keyboardType: TextInputType.url,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _notesController,
+              decoration: _inputDecoration(theme, 'Notes'),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _isSubmitting ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.neonBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Text('Add Competitor', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(ThemeData theme, String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.6)),
+      filled: true,
+      fillColor: theme.colorScheme.surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.dividerColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.dividerColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppTheme.neonBlue, width: 2),
+      ),
+    );
   }
 }

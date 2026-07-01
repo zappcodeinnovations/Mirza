@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/app_icons.dart';
 import '../../core/app_theme.dart';
+import 'dart:io';
 import '../main_navigation_shell.dart';
 import 'register_view.dart';
+import 'register_admin_view.dart';
 import 'forgot_password_view.dart';
 
 class LoginView extends StatefulWidget {
@@ -273,6 +275,37 @@ class _LoginViewState extends State<LoginView> {
                         ),
                       ],
                     ),
+                    
+                  if (Platform.isIOS && authController.isAdminRegistrationEnabled) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Admin user? ",
+                          style: TextStyle(color: Color(0xFF94A3B8)),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterAdminView(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Register Admin",
+                            style: TextStyle(
+                              color: AppTheme.neonBlue,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

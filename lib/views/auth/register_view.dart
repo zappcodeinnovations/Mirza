@@ -124,7 +124,7 @@ class _RegisterViewState extends State<RegisterView> {
                     hintText: "Enter desired username",
                     prefixIcon: Icon(AppIcons.person, color: Color(0xFF475569)),
                   ),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.black),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return "Please enter a username";
@@ -160,7 +160,7 @@ class _RegisterViewState extends State<RegisterView> {
                       },
                     ),
                   ),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.black),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "Please enter a password";
@@ -185,7 +185,7 @@ class _RegisterViewState extends State<RegisterView> {
                       color: Color(0xFF475569),
                     ),
                   ),
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.black),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "Please confirm your password";

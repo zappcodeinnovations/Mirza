@@ -17,6 +17,8 @@ class StockView extends StatefulWidget {
 class _StockViewState extends State<StockView> {
   final ScrollController _scrollController = ScrollController();
   late StockController _controller;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -32,6 +34,7 @@ class _StockViewState extends State<StockView> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -136,6 +139,12 @@ class _StockViewState extends State<StockView> {
             );
           }
 
+          final filteredRecords = controller.stockRecords.where((record) {
+            final query = _searchQuery.toLowerCase();
+            return record.productName.toLowerCase().contains(query) ||
+                   record.itemCode.toLowerCase().contains(query);
+          }).toList();
+
           return RefreshIndicator(
             onRefresh: () => controller.loadStock(refresh: true),
             color: AppTheme.neonBlue,
@@ -147,12 +156,46 @@ class _StockViewState extends State<StockView> {
                   SliverToBoxAdapter(
                     child: _buildKpisSection(theme, controller.kpis!),
                   ),
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search by SKU or Name...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: theme.dividerColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: theme.dividerColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppTheme.neonBlue),
+                        ),
+                        filled: true,
+                        fillColor: theme.colorScheme.surface,
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                    ),
+                  ),
+                ),
                   
-                if (controller.stockRecords.isEmpty)
+                if (filteredRecords.isEmpty)
                   SliverFillRemaining(
                     child: Center(
                       child: Text(
-                        'No stock found for the selected filters.',
+                        _searchQuery.isNotEmpty 
+                            ? 'No results found for "$_searchQuery".'
+                            : 'No stock found for the selected filters.',
                         style: theme.textTheme.bodyLarge,
                       ),
                     ),
@@ -163,7 +206,8 @@ class _StockViewState extends State<StockView> {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          if (index == controller.stockRecords.length) {
+                          if (index == filteredRecords.length) {
+                            if (_searchQuery.isNotEmpty) return const SizedBox.shrink();
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 16.0),
                               child: Center(
@@ -174,10 +218,10 @@ class _StockViewState extends State<StockView> {
                             );
                           }
 
-                          final record = controller.stockRecords[index];
+                          final record = filteredRecords[index];
                           return _buildStockCard(theme, record);
                         },
-                        childCount: controller.stockRecords.length + (controller.isFetchingMore ? 1 : 0),
+                        childCount: filteredRecords.length + (controller.isFetchingMore && _searchQuery.isEmpty ? 1 : 0),
                       ),
                     ),
                   ),

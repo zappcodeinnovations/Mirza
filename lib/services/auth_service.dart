@@ -20,6 +20,20 @@ class AuthService {
     }
   }
 
+  // Check if admin registration is enabled on the server
+  Future<bool> checkAdminRegistrationEnabled() async {
+    try {
+      final response = await _apiClient.get(ApiEndpoints.isEnabled, requireAuth: false);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['is_enabled'] as bool? ?? false;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Register a new account
   Future<Map<String, dynamic>> register({
     required String username,
@@ -42,6 +56,39 @@ class AuthService {
       };
     } catch (e) {
       return {'success': false, 'message': 'Register error: $e'};
+    }
+  }
+
+  // Register admin account
+  Future<Map<String, dynamic>> registerAdmin({
+    required String username,
+    required String password,
+    required String confirmPassword,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String mobileNumber,
+  }) async {
+    try {
+      final body = {
+        'username': username,
+        'password': password,
+        'confirm_password': confirmPassword,
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'mobile_number': mobileNumber,
+      };
+      final response = await _apiClient.post(ApiEndpoints.registerAdmin, body: body, requireAuth: false);
+      final data = jsonDecode(response.body);
+      
+      return {
+        'success': data['success'] as bool? ?? response.statusCode == 200 || response.statusCode == 210,
+        'message': data['message']?.toString() ?? 'Registration status received.',
+        'user_id': data['user_id']?.toString() ?? '',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Admin register error: $e'};
     }
   }
 
@@ -188,8 +235,33 @@ class AuthService {
     }
   }
 
+  // Delete Account
+  Future<Map<String, dynamic>> deleteAccount(String password) async {
+    try {
+      final body = {'password': password};
+      final response = await _apiClient.delete(ApiEndpoints.deleteAccount, body: body, requireAuth: true);
+      final data = jsonDecode(response.body);
+      return {
+        'success': data['success'] as bool? ?? false,
+        'message': data['message']?.toString() ?? 'Account deleted.',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Failed to delete account: $e'};
+    }
+  }
+
   // Logout session
   Future<void> logout() async {
-    await _apiClient.clearSession();
+    try {
+      final refreshToken = await _apiClient.getRefreshToken();
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        final body = {'refresh': refreshToken};
+        await _apiClient.post(ApiEndpoints.logout, body: body, requireAuth: true);
+      }
+    } catch (_) {
+      // Ignore network errors during logout
+    } finally {
+      await _apiClient.clearSession();
+    }
   }
 }

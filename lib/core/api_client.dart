@@ -151,6 +151,70 @@ class ApiClient {
     }
   }
 
+  // DELETE request wrapper
+  Future<http.Response> delete(String endpoint, {Object? body, bool requireAuth = true}) async {
+    final url = Uri.parse('${ApiEndpoints.baseUrl}$endpoint');
+    final headers = await _getHeaders(requireAuth: requireAuth);
+    final encodedBody = body != null ? jsonEncode(body) : null;
+
+    try {
+      var response = await _client.delete(url, headers: headers, body: encodedBody);
+      
+      if (response.statusCode == 401 && requireAuth) {
+        final refreshed = await _attemptTokenRefresh();
+        if (refreshed) {
+          final newHeaders = await _getHeaders(requireAuth: true);
+          response = await _client.delete(url, headers: newHeaders, body: encodedBody);
+        }
+      }
+      return response;
+    } on SocketException catch (_) {
+      throw AppException('Please check your internet connection.');
+    } on TimeoutException catch (_) {
+      throw AppException('The connection timed out. Please try again later.');
+    } on FormatException catch (_) {
+      throw AppException('Invalid response format from server.');
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException('An unexpected network error occurred.');
+    }
+  }
+
+  // Multipart POST request wrapper
+  Future<http.StreamedResponse> postMultipart(String endpoint, {required String fileField, required File file, bool requireAuth = true}) async {
+    final url = Uri.parse('${ApiEndpoints.baseUrl}$endpoint');
+    final request = http.MultipartRequest('POST', url);
+    final headers = await _getHeaders(requireAuth: requireAuth);
+    // MultipartRequest doesn't need Content-Type as application/json, so let's remove it if present
+    headers.remove('Content-Type');
+    request.headers.addAll(headers);
+    request.files.add(await http.MultipartFile.fromPath(fileField, file.path));
+
+    try {
+      var response = await _client.send(request);
+      
+      if (response.statusCode == 401 && requireAuth) {
+        final refreshed = await _attemptTokenRefresh();
+        if (refreshed) {
+          final newRequest = http.MultipartRequest('POST', url);
+          final newHeaders = await _getHeaders(requireAuth: true);
+          newHeaders.remove('Content-Type');
+          newRequest.headers.addAll(newHeaders);
+          newRequest.files.add(await http.MultipartFile.fromPath(fileField, file.path));
+          response = await _client.send(newRequest);
+        }
+      }
+      return response;
+    } on SocketException catch (_) {
+      throw AppException('Please check your internet connection.');
+    } on TimeoutException catch (_) {
+      throw AppException('The connection timed out. Please try again later.');
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException('An unexpected network error occurred during file upload.');
+    }
+  }
+
   // Perform Token Refresh
   Future<bool> _attemptTokenRefresh() async {
     final refreshToken = await getRefreshToken();

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/competitors_model.dart';
 import '../services/competitors_service.dart';
@@ -60,5 +61,37 @@ class CompetitorsController extends ChangeNotifier {
       }
       notifyListeners();
     }
+  }
+
+  Future<Map<String, dynamic>> addCompetitor(Map<String, dynamic> data) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _competitorsService.addCompetitor(data);
+
+    if (result['success'] == true) {
+      await loadCompetitors(refresh: true);
+    } else {
+      _isLoading = false;
+      notifyListeners();
+    }
+    
+    return result;
+  }
+
+  Future<Map<String, dynamic>> uploadCompetitors(File file) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final result = await _competitorsService.uploadCompetitors(file);
+
+    if (result['success'] == true) {
+      await loadCompetitors(refresh: true);
+    } else {
+      _isLoading = false;
+      notifyListeners();
+    }
+
+    return result;
   }
 }

@@ -11,6 +11,7 @@ class AuthController extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   bool _isRegistrationEnabled = true;
+  bool _isAdminRegistrationEnabled = false;
   String? _otpResetToken;
   String? _resetEmail;
 
@@ -18,6 +19,7 @@ class AuthController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isRegistrationEnabled => _isRegistrationEnabled;
+  bool get isAdminRegistrationEnabled => _isAdminRegistrationEnabled;
   String? get otpResetToken => _otpResetToken;
   String? get resetEmail => _resetEmail;
 
@@ -32,6 +34,7 @@ class AuthController extends ChangeNotifier {
     try {
       // Check server signup availability in background
       _isRegistrationEnabled = await _authService.checkRegistrationEnabled();
+      _isAdminRegistrationEnabled = await _authService.checkAdminRegistrationEnabled();
       
       final loggedIn = await _apiClient.isLoggedIn();
       if (loggedIn) {
@@ -94,6 +97,46 @@ class AuthController extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Registration failed. Please try again.';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Handle Admin Registration
+  Future<bool> registerAdmin({
+    required String username,
+    required String password,
+    required String confirmPassword,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String mobileNumber,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _authService.registerAdmin(
+        username: username,
+        password: password,
+        confirmPassword: confirmPassword,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        mobileNumber: mobileNumber,
+      );
+
+      if (result['success'] == true) {
+        return true;
+      } else {
+        _errorMessage = result['message'];
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Admin registration failed. Please try again.';
       return false;
     } finally {
       _isLoading = false;
@@ -268,6 +311,30 @@ class AuthController extends ChangeNotifier {
 
       if (result['success'] == true) {
         await logout(); // Force login again as per comments
+        return true;
+      } else {
+        _errorMessage = result['message'];
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Delete Account
+  Future<bool> deleteAccount(String password) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _authService.deleteAccount(password);
+      if (result['success'] == true) {
+        await logout();
         return true;
       } else {
         _errorMessage = result['message'];

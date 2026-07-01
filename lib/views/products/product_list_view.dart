@@ -709,6 +709,14 @@ class _ProductListViewState extends State<ProductListView> {
     );
   }
 
+  String _toTitleCase(String text) {
+    if (text.isEmpty) return text;
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   Widget _buildProductCard(
     BuildContext context,
     dynamic product,
@@ -718,6 +726,11 @@ class _ProductListViewState extends State<ProductListView> {
     
     // Added debug print for image url
     debugPrint('IMAGE URL FOR SKU ${product.skuCode}: "${product.imageUrl}"');
+
+    final rawProductName = product.styleName.isNotEmpty 
+        ? '${product.styleName} ${product.color}'.trim() 
+        : "Unknown Product";
+    final displayProductName = _toTitleCase(rawProductName);
 
     return GestureDetector(
       onTap: () {
@@ -755,14 +768,21 @@ class _ProductListViewState extends State<ProductListView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  product.styleName.isNotEmpty ? product.styleName : "Unknown Product",
+                  displayProductName,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontSize: 22,
-                    color: AppTheme.neonGreen,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.neonBlue,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(product.skuCode, style: theme.textTheme.titleLarge),
+                const SizedBox(height: 6),
+                Text(
+                  "SKU: ${product.skuCode}", 
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 
                 const SizedBox(height: 18),
                 
