@@ -284,21 +284,88 @@ class _PunchOrderViewState extends State<PunchOrderView> {
             const Divider(),
             const SizedBox(height: 8),
             Text('Reason: ${order.reason}', style: theme.textTheme.bodyMedium),
-            if (order.forecastReason != null && order.forecastReason!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text('Analysis:', style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.neonBlue)),
-              Text(order.forecastReason!, style: theme.textTheme.bodySmall, maxLines: 2, overflow: TextOverflow.ellipsis),
-            ],
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('By: ${order.punchedByName}', style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
-                Text(dateString, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5))),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('By: ${order.punchedByName}', style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+                    const SizedBox(height: 4),
+                    Text(dateString, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5))),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () => _showAnalysisDialog(context, order),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('View Analysis', style: TextStyle(color: AppTheme.neonBlue, fontWeight: FontWeight.bold)),
+                ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAnalysisDialog(BuildContext context, PunchOrderModel order) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return AlertDialog(
+          backgroundColor: theme.colorScheme.surface,
+          title: const Text('Analysis Report', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildAnalysisRow('Forecast Units', order.forecastUnits?.toString() ?? 'N/A', theme),
+                _buildAnalysisRow('Recommended Qty', order.recommendedQty?.toString() ?? 'N/A', theme),
+                _buildAnalysisRow('Current Stock', order.currentStock?.toString() ?? 'N/A', theme),
+                _buildAnalysisRow('Difference', order.difference?.toString() ?? 'N/A', theme),
+                const SizedBox(height: 16),
+                if (order.forecastReason != null && order.forecastReason!.isNotEmpty) ...[
+                  Text('Forecast Reason', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.neonBlue)),
+                  const SizedBox(height: 4),
+                  Text(order.forecastReason!, style: theme.textTheme.bodySmall),
+                  const SizedBox(height: 12),
+                ],
+                if (order.differenceReason != null && order.differenceReason!.isNotEmpty) ...[
+                  Text('Difference Reason', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.neonBlue)),
+                  const SizedBox(height: 4),
+                  Text(order.differenceReason!, style: theme.textTheme.bodySmall),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close', style: TextStyle(color: AppTheme.neonBlue)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAnalysisRow(String label, String value, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.7))),
+          Text(value, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }

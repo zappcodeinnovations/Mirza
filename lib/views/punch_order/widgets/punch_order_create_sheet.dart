@@ -16,8 +16,7 @@ class PunchOrderCreateSheet extends StatefulWidget {
 class _PunchOrderCreateSheetState extends State<PunchOrderCreateSheet> {
   final _formKey = GlobalKey<FormState>();
 
-  final _skuCodeController = TextEditingController();
-  final _skuNameController = TextEditingController();
+  final _skuSearchController = TextEditingController();
   final _quantityController = TextEditingController();
   final _reasonController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -36,8 +35,7 @@ class _PunchOrderCreateSheetState extends State<PunchOrderCreateSheet> {
 
   @override
   void dispose() {
-    _skuCodeController.dispose();
-    _skuNameController.dispose();
+    _skuSearchController.dispose();
     _quantityController.dispose();
     _reasonController.dispose();
     _descriptionController.dispose();
@@ -54,9 +52,18 @@ class _PunchOrderCreateSheetState extends State<PunchOrderCreateSheet> {
 
     final controller = Provider.of<PunchOrderController>(context, listen: false);
 
+    String skuCode = _skuSearchController.text.trim();
+    String skuName = skuCode;
+    
+    if (skuCode.contains(' - ')) {
+       final parts = skuCode.split(' - ');
+       skuCode = parts[0].trim();
+       skuName = parts.sublist(1).join(' - ').trim();
+    }
+
     final data = {
-      "sku_code": _skuCodeController.text.trim(),
-      "sku_name": _skuNameController.text.trim(),
+      "sku_code": skuCode,
+      "sku_name": skuName,
       "quantity": int.tryParse(_quantityController.text.trim()) ?? 0,
       "reason": _reasonController.text.trim(),
       "description": _descriptionController.text.trim(),
@@ -187,32 +194,20 @@ class _PunchOrderCreateSheetState extends State<PunchOrderCreateSheet> {
                   return options;
                 },
                 onSelected: (String selection) {
-                  // Usually selection is "LM13971_02 - Clerkenwell (Tan)"
-                  // We can parse or just put the whole thing in sku code
-                  // If it has ' - ', we can split it to auto-fill sku_name
-                  _skuCodeController.text = selection;
-                  if (selection.contains(' - ')) {
-                     final parts = selection.split(' - ');
-                     _skuCodeController.text = parts[0];
-                     _skuNameController.text = parts.sublist(1).join(' - ');
-                  }
+                  _skuSearchController.text = selection;
                 },
                 fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
-                  // Keep our controller in sync or just use ours?
-                  // To avoid controller mismatch, we can just use the provided one and sync it to _skuCodeController on change
                   textEditingController.addListener(() {
-                    if (_skuCodeController.text != textEditingController.text) {
-                       _skuCodeController.text = textEditingController.text;
+                    if (_skuSearchController.text != textEditingController.text) {
+                       _skuSearchController.text = textEditingController.text;
                     }
                   });
                   
                   return TextFormField(
                     controller: textEditingController,
                     focusNode: focusNode,
-                    decoration: _inputDecoration(theme, 'SKU Code *').copyWith(
-                      // suffixIcon: const Icon(Icons.search, color: AppTheme.neonBlue),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty ? 'SKU Code is required' : null,
+                    decoration: _inputDecoration(theme, 'SKU Code or Name *'),
+                    validator: (value) => value == null || value.trim().isEmpty ? 'SKU Code or Name is required' : null,
                   );
                 },
                 optionsViewBuilder: (context, onSelected, options) {
@@ -243,13 +238,6 @@ class _PunchOrderCreateSheetState extends State<PunchOrderCreateSheet> {
                     ),
                   );
                 },
-              ),
-              const SizedBox(height: 12),
-              
-              TextFormField(
-                controller: _skuNameController,
-                decoration: _inputDecoration(theme, 'SKU Name *'),
-                validator: (value) => value == null || value.trim().isEmpty ? 'SKU Name is required' : null,
               ),
               const SizedBox(height: 12),
               
