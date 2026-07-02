@@ -276,36 +276,36 @@ class _LoginViewState extends State<LoginView> {
                       ],
                     ),
                     
-                  if (Platform.isIOS && authController.isAdminRegistrationEnabled) ...[
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Admin user? ",
-                          style: TextStyle(color: Color(0xFF94A3B8)),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const RegisterAdminView(),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            "Register Admin",
-                            style: TextStyle(
-                              color: AppTheme.neonBlue,
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  // if (Platform.isIOS && authController.isAdminRegistrationEnabled) ...[
+                  //   const SizedBox(height: 16),
+                  //   Row(
+                  //     mainAxisAlignment: MainAxisAlignment.center,
+                  //     children: [
+                  //       const Text(
+                  //         "Admin user? ",
+                  //         style: TextStyle(color: Color(0xFF94A3B8)),
+                  //       ),
+                  //       GestureDetector(
+                  //         onTap: () {
+                  //           Navigator.push(
+                  //             context,
+                  //             MaterialPageRoute(
+                  //               builder: (_) => const RegisterAdminView(),
+                  //             ),
+                  //           );
+                  //         },
+                  //         child: const Text(
+                  //           "Register Admin",
+                  //           style: TextStyle(
+                  //             color: AppTheme.neonBlue,
+                  //             fontWeight: FontWeight.bold,
+                  //             decoration: TextDecoration.underline,
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ],
                 ],
               ),
             ),
